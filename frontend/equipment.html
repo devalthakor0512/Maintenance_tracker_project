@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Management - GearGuard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Spline Background */
+        .spline-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .spline-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.4);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+        }
+
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 3rem 4rem 2rem;
+        }
+
+        .breadcrumb {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: #a1a1aa;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #ffffff;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            color: white;
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(168, 85, 247, 0.5);
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            padding: 0 4rem 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.875rem 1rem;
+            background: #1a1a2e;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .filter-select:hover {
+            border-color: #a855f7;
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 0.5rem;
+        }
+
+        /* Loading & Error States */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #a1a1aa;
+            font-size: 1.25rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #ef4444;
+            font-size: 1.25rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 6rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+        }
+
+        /* Equipment Grid */
+        .equipment-container {
+            padding: 0 4rem 4rem;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .equipment-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .equipment-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .card-title-section {
+            flex: 1;
+        }
+
+        .equipment-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .serial-number {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .status-active {
+            background: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .status-maintenance {
+            background: #eab308;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+        }
+
+        .status-scrapped {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .card-details {
+            display: grid;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: #a1a1aa;
+        }
+
+        .detail-value {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-department {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-warranty-active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .badge-warranty-expired {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .smart-button {
+            width: 100%;
+            padding: 0.875rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 0.5rem;
+            color: #d946ef;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .smart-button:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.375rem;
+            color: #a1a1aa;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e5e5e5;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.875rem;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 0.5rem;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: #252540;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #a1a1aa;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+
+            nav,
+            .page-header,
+            .controls-bar,
+            .equipment-container {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Spline 3D Background -->
+    <div class="spline-container">
+        <iframe src="https://my.spline.design/claritystream-a72K0KUwFoZV82QBzvu52Kai" frameborder="0" width="100%"
+            height="100%"></iframe>
+    </div>
+
+    <!-- Dark Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo" style="text-decoration: none;">GearGuard</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="equipment.html" class="active">Equipment</a></li>
+                <li><a href="teams.html">Teams</a></li>
+                <li><a href="request.html">Requests</a></li>
+                <li><a href="calendar.html">Calendar</a></li>
+                <li><a href="reports.html">Reports</a></li>
+            </ul>
+            <div class="user-profile">A</div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> / Equipment
+            </div>
+            <div class="header-content">
+                <h1 class="page-title">Equipment Management</h1>
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Equipment</button>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput"
+                    placeholder="Search equipment by name, serial number, or location..." onkeyup="filterEquipment()">
+            </div>
+            <select class="filter-select" id="departmentFilter" onchange="filterEquipment()">
+                <option value="">All Departments</option>
+                <option value="Production">Production</option>
+                <option value="IT">IT</option>
+                <option value="Sales">Sales</option>
+                <option value="Logistics">Logistics</option>
+            </select>
+            <select class="filter-select" id="statusFilter" onchange="filterEquipment()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="maintenance">Under Maintenance</option>
+                <option value="scrapped">Scrapped</option>
+            </select>
+        </div>
+
+        <!-- Equipment Container -->
+        <div class="equipment-container">
+            <div id="equipmentGrid" class="equipment-grid">
+                <!-- Loading state -->
+                <div class="loading">Loading equipment...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Equipment Modal -->
+    <div class="modal" id="equipmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Equipment</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="equipmentForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="equipmentId">
+                <div class="form-group">
+                    <label class="form-label">Equipment Name *</label>
+                    <input type="text" class="form-input" id="equipmentName" placeholder="e.g., CNC Machine 01"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Serial Number *</label>
+                    <input type="text" class="form-input" id="serialNumber" placeholder="e.g., SN-2024-001" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select class="form-select" id="category" required>
+                        <option value="">Select category</option>
+                        <option>Computer</option>
+                        <option>Vehicle</option>
+                        <option>Machine</option>
+                        <option>Tool</option>
+                        <option>Generator</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department *</label>
+                    <select class="form-select" id="department" required>
+                        <option value="">Select department</option>
+                        <option>Production</option>
+                        <option>IT</option>
+                        <option>Sales</option>
+                        <option>Logistics</option>
+                        <option>Administration</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned Employee ID</label>
+                    <input type="number" class="form-input" id="assignedEmployee" placeholder="User ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Maintenance Team ID *</label>
+                    <input type="number" class="form-input" id="maintenanceTeam" placeholder="Team ID" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" id="location" placeholder="e.g., Factory Floor A">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" class="form-input" id="purchaseDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warranty Expiry Date</label>
+                    <input type="date" class="form-input" id="warrantyExpiry">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="notes" placeholder="Additional information..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        checkAuth();
+        let allEquipment = [];
+
+        // Get category icon
+        function getCategoryIcon(category) {
+            const icons = {
+                'Computer': '💻',
+                'Vehicle': '🚗',
+                'Machine': '⚙️',
+                'Tool': '🔧',
+                'Generator': '🔌',
+                'Other': '📦'
+            };
+            return icons[category] || '📦';
+        }
+
+        // Get status class
+        function getStatusClass(status) {
+            return `status-${status ? status.toLowerCase() : 'unknown'}`;
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        }
+
+        // Check warranty status
+        function getWarrantyStatus(expiryDate) {
+            if (!expiryDate) return { class: 'badge-warranty-expired', text: 'N/A' };
+            const today = new Date();
+            const expiry = new Date(expiryDate);
+            if (expiry < today) {
+                return { class: 'badge-warranty-expired', text: 'Expired' };
+            }
+            return { class: 'badge-warranty-active', text: 'Active' };
+        }
+
+        // Fetch all equipment from API
+        async function fetchEquipment() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/equipment/`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+                if (!response.ok) throw new Error('Failed to fetch equipment');
+                allEquipment = await response.json();
+                renderEquipment(allEquipment);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('equipmentGrid').innerHTML = `
+                    <div class="error">Failed to load equipment. Please check if backend is running.</div>
+                `;
+            }
+        }
+
+        // Render equipment cards
+        function renderEquipment(equipment) {
+            const grid = document.getElementById('equipmentGrid');
+
+            if (equipment.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>No Equipment Found</h3>
+                        <p>Start by adding your first equipment to the system</p>
+                        <button class="btn btn-primary" onclick="openAddModal()">+ Add Equipment</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = equipment.map(item => {
+                const warranty = getWarrantyStatus(item.warranty_expiry);
+                return `
+                    <div class="equipment-card">
+                        <div class="card-header">
+                            <div class="equipment-icon">${getCategoryIcon(item.category)}</div>
+                            <div class="card-title-section">
+                                <h3 class="equipment-name">${item.equipment_name}</h3>
+                                <p class="serial-number">${item.serial_number}</p>
+                            </div>
+                            <div class="status-indicator ${getStatusClass(item.status)}"></div>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Department</span>
+                                <span class="badge badge-department">${item.department}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Assigned To</span>
+                                <span class="detail-value">${item.assigned_employee_id ? `User #${item.assigned_employee_id}` : 'Unassigned'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Location</span>
+                                <span class="detail-value">${item.location || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Warranty</span>
+                                <span class="badge ${warranty.class}">${warranty.text}</span>
+                            </div>
+                        </div>
+                        <button class="smart-button" onclick="viewRequests(${item.id})">🔧 Maintenance Requests</button>
+                        <div class="card-actions">
+                            <button class="action-btn" onclick="openEditModal(${item.id})">Edit</button>
+                            <button class="action-btn" onclick="deleteEquipment(${item.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter equipment
+        function filterEquipment() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const department = document.getElementById('departmentFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const filtered = allEquipment.filter(item => {
+                const matchesSearch = item.equipment_name.toLowerCase().includes(searchTerm) ||
+                    item.serial_number.toLowerCase().includes(searchTerm) ||
+                    (item.location && item.location.toLowerCase().includes(searchTerm));
+                const matchesDepartment = !department || item.department === department;
+                const matchesStatus = !status || item.status === status;
+
+                return matchesSearch && matchesDepartment && matchesStatus;
+            });
+
+            renderEquipment(filtered);
+        }
+
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Equipment';
+            document.getElementById('equipmentForm').reset();
+            document.getElementById('equipmentId').value = '';
+            document.getElementById('equipmentModal').classList.add('active');
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const equipment = allEquipment.find(e => e.id === id);
+            if (!equipment) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Equipment';
+            document.getElementById('equipmentId').value = equipment.id;
+            document.getElementById('equipmentName').value = equipment.equipment_name;
+            document.getElementById('serialNumber').value = equipment.serial_number;
+            document.getElementById('category').value = equipment.category;
+            document.getElementById('department').value = equipment.department;
+            document.getElementById('assignedEmployee').value = equipment.assigned_employee_id || '';
+            document.getElementById('maintenanceTeam').value = equipment.maintenance_team_id;
+            document.getElementById('location').value = equipment.location || '';
+            // Format date for input type="date"
+            document.getElementById('purchaseDate').value = equipment.purchase_date ? equipment.purchase_date.split('T')[0] : '';
+            document.getElementById('warrantyExpiry').value = equipment.warranty_expiry ? equipment.warranty_expiry.split('T')[0] : '';
+            document.getElementById('notes').value = equipment.notes || '';
+
+            document.getElementById('equipmentModal').classList.add('active');
+        }
+
+
+        // Handle form submit
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('equipmentId').value;
+            const data = {
+                equipment_name: document.getElementById('equipmentName').value,
+                serial_number: document.getElementById('serialNumber').value,
+                category: document.getElementById('category').value,
+                department: document.getElementById('department').value,
+                assigned_employee_id: parseInt(document.getElementById('assignedEmployee').value) || null,
+                maintenance_team_id: parseInt(document.getElementById('maintenanceTeam').value),
+                location: document.getElementById('location').value || null,
+                purchase_date: document.getElementById('purchaseDate').value || null,
+                warranty_expiry: document.getElementById('warrantyExpiry').value || null,
+                notes: document.getElementById('notes').value || null,
+                status: 'active' // Default status
+            };
+
+            try {
+                const url = id ? `${API_BASE_URL}/equipment/${id}` : `${API_BASE_URL}/equipment/`;
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 403) {
+                    alert("You do not have permission to perform this action (Admin only).");
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to save equipment');
+                }
+
+                closeModal();
+                fetchEquipment();
+                alert(id ? 'Equipment updated successfully!' : 'Equipment added successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('equipmentModal').classList.remove('active');
+        }
+
+        // View maintenance requests
+        function viewRequests(id) {
+            window.location.href = `request.html?equipment_id=${id}`;
+        }
+
+        // Delete equipment
+        async function deleteEquipment(id) {
+            if (!confirm('Are you sure you want to delete this equipment?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/equipment/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.status === 403) {
+                    alert("You do not have permission to perform this action (Admin only).");
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to delete equipment');
+
+                fetchEquipment();
+                alert('Equipment deleted successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to delete equipment. Please try again.');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchEquipment);
+    </script>
+
+</body>
+
+</html>

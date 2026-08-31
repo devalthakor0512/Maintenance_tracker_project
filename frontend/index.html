@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GearGuard - Equipment Maintenance Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Spline Background */
+        .spline-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .spline-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Overlay for better text contrast */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn-login {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-signup {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            color: #d946ef;
+        }
+
+        .hero-title {
+            font-family: Georgia, serif;
+            font-size: 5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #a1a1aa;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(168, 85, 247, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 3rem;
+            padding: 2rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: #a1a1aa;
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .testimonial-card {
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            color: #e5e5e5;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+        }
+
+        .author-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .author-info p {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 2rem;
+            }
+
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 1.5rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Spline 3D Background -->
+    <div class="spline-container">
+        <iframe src="https://my.spline.design/claritystream-a72K0KUwFoZV82QBzvu52Kai" frameborder="0" width="100%"
+            height="100%"></iframe>
+    </div>
+
+    <!-- Dark Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo" style="text-decoration: none;">GearGuard</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Dashboard</a></li>
+                <li><a href="equipment.html">Equipment</a></li>
+                <li><a href="teams.html">Teams</a></li>
+                <li><a href="request.html">Requests</a></li>
+                <li><a href="calendar.html">Calendar</a></li>
+                <li><a href="reports.html">Reports</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="signup.html" class="btn-signup">Sign-up</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="glow"></div>
+            <div class="badge">✨ Maintenance Management System</div>
+            <h1 class="hero-title">
+                Equipment management<br>
+                for the modern enterprise
+            </h1>
+            <p class="hero-subtitle">
+                Track assets, manage teams, and automate maintenance workflows with institutional-grade reliability.
+                Built for efficiency, designed for scale.
+            </p>
+            <div class="cta-buttons">
+                <a href="equipment.html" class="btn btn-primary">Get Started →</a>
+                <a href="request.html" class="btn btn-secondary">View Requests</a>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-number">247</div>
+                    <div class="stat-label">Total Equipment</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Active Requests</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Teams Available</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">99.8%</div>
+                    <div class="stat-label">System Uptime</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="features-grid">
+                <a href="equipment.html" class="feature-card" style="text-decoration: none; color: inherit;">
+                    <div class="feature-icon">⚙️</div>
+                    <h3 class="feature-title">Equipment Tracking</h3>
+                    <p class="feature-description">
+                        Comprehensive asset management with detailed tracking by department, employee, and location.
+                        Monitor warranty status and maintenance history.
+                    </p>
+                </a>
+                <a href="teams.html" class="feature-card" style="text-decoration: none; color: inherit;">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">Team Management</h3>
+                    <p class="feature-description">
+                        Organize specialized maintenance teams with automatic request routing. Assign technicians and
+                        manage workload distribution efficiently.
+                    </p>
+                </a>
+                <a href="request.html" class="feature-card" style="text-decoration: none; color: inherit;">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Smart Requests</h3>
+                    <p class="feature-description">
+                        Automated workflow with intelligent auto-fill, request prioritization, and real-time status
+                        tracking from creation to completion.
+                    </p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="testimonials">
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        "The automation features saved our team countless hours. Equipment tracking has never been this
+                        seamless."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div class="author-info">
+                            <h4>Sarah Chen</h4>
+                            <p>Operations Manager</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        "GearGuard transformed our maintenance workflow. The Kanban board makes request management
+                        intuitive and efficient."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div class="author-info">
+                            <h4>Michael Torres</h4>
+                            <p>Maintenance Lead</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        "The preventive maintenance scheduling feature reduced our equipment downtime by 40%. Highly
+                        recommended."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div class="author-info">
+                            <h4>Jennifer Park</h4>
+                            <p>Facility Director</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script src="js/config.js"></script>
+        <script>
+            // Check auth immediately (this turns index.html into a protected Dashboard)
+            if (localStorage.getItem("access_token")) {
+                // User is logged in
+                updateNavForLoggedInUser();
+                fetchDashboardStats();
+            } else {
+                // User is not logged in. 
+                // If we want this to be a public landing page, we do nothing.
+                // If we want it to be a protected dashboard, we call checkAuth() to redirect.
+                // Given it has a "Login" button in the corner, it acts as a Landing Page for guests.
+                // BUT, login.html redirects here. 
+                // So we'll leave it as accessible, but if logged in we show Dashboard data.
+                // Note: The HTML currently has HARDCODED stats. We should probably hide them or show "..." if loading, 
+                // but for guests maybe we keep the "marketing" numbers? 
+                // Let's assume for this specific internal app, we want to show REAL numbers if logged in, 
+                // and maybe keeps marketing numbers if not (or redirect). 
+                // I'll stick to: If logged in, fetch real data.
+            }
+
+            function updateNavForLoggedInUser() {
+                const authButtons = document.querySelector('.auth-buttons');
+                authButtons.innerHTML = `
+                <div class="user-profile" style="margin-right:1rem; cursor:default">Admin</div>
+                <button onclick="logout()" class="btn-login" style="border:1px solid #ef4444; color:#ef4444;">Logout</button>
+            `;
+            }
+
+            async function fetchDashboardStats() {
+                try {
+                    // Fetch basic counts
+                    // Note: In a real app we'd have a specific /dashboard/stats endpoint to avoid fetching all data
+                    // But here we'll just fetch list lengths as we did for other pages
+                    const [equipmentRes, requestsRes, teamsRes] = await Promise.all([
+                        fetch(`${API_BASE_URL}/equipment/`, { headers: getAuthHeaders() }),
+                        fetch(`${API_BASE_URL}/requests/`, { headers: getAuthHeaders() }),
+                        fetch(`${API_BASE_URL}/teams/`, { headers: getAuthHeaders() })
+                    ]);
+
+                    if (equipmentRes.status === 401) { logout(); return; }
+
+                    if (equipmentRes.ok && requestsRes.ok && teamsRes.ok) {
+                        const equipment = await equipmentRes.json();
+                        const requests = await requestsRes.json();
+                        const teams = await teamsRes.json();
+
+                        // Update DOM
+                        const stats = document.querySelectorAll('.stat-number');
+                        // Assuming order: Total Equipment, Active Requests, Teams Available, System Uptime
+                        if (stats[0]) stats[0].textContent = equipment.length;
+
+                        // Filter active requests (everything except 'Repaired' or 'Scrap' maybe?)
+                        const activeRequests = requests.filter(r => r.stage !== 'Repaired' && r.stage !== 'Scrap').length;
+                        if (stats[1]) stats[1].textContent = activeRequests;
+
+                        if (stats[2]) stats[2].textContent = teams.length;
+
+                        // Keep Uptime hardcoded or random
+                        if (stats[3]) stats[3].textContent = '99.9%';
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch dashboard stats", error);
+                }
+            }
+        </script>
+</body>
+
+</html>

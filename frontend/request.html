@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Requests - GearGuard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Spline Background */
+        .spline-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .spline-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.4);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+        }
+
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 3rem 4rem 2rem;
+        }
+
+        .breadcrumb {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: #a1a1aa;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #ffffff;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            color: white;
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(168, 85, 247, 0.5);
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            padding: 0 4rem 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.875rem 1rem;
+            background: #1a1a2e;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .filter-select:hover {
+            border-color: #a855f7;
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 0.5rem;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .view-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: rgba(168, 85, 247, 0.3);
+            color: #ffffff;
+        }
+
+        /* Loading & Error States */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #a1a1aa;
+            font-size: 1.25rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #ef4444;
+            font-size: 1.25rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 6rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+        }
+
+        /* Kanban Board */
+        .kanban-container {
+            padding: 0 4rem 4rem;
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            min-height: 500px;
+        }
+
+        .kanban-column {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .column-header.new {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .column-header.in-progress {
+            background: rgba(234, 179, 8, 0.2);
+        }
+
+        .column-header.repaired {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .column-header.scrap {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .column-count {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .column-cards {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* Request Card */
+        .request-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            cursor: grab;
+            transition: all 0.3s;
+        }
+
+        .request-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .request-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .card-subject {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .card-equipment {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #a1a1aa;
+        }
+
+        .request-type {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .type-corrective {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .type-preventive {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .technician-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        /* List View */
+        .list-container {
+            padding: 0 4rem 4rem;
+            display: none;
+        }
+
+        .list-container.active {
+            display: block;
+        }
+
+        .kanban-container.hidden {
+            display: none;
+        }
+
+        .requests-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .requests-table th,
+        .requests-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .requests-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #a1a1aa;
+        }
+
+        .requests-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stage-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .stage-new {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .stage-in-progress {
+            background: rgba(234, 179, 8, 0.2);
+            color: #facc15;
+        }
+
+        .stage-repaired {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .stage-scrap {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .action-btn {
+            padding: 0.375rem 0.75rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.375rem;
+            color: #a1a1aa;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e5e5e5;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.875rem;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 0.5rem;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: #252540;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .auto-filled {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+
+        .auto-fill-note {
+            font-size: 0.75rem;
+            color: #a855f7;
+            margin-top: 0.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #a1a1aa;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        @media (max-width: 1200px) {
+            .kanban-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            nav,
+            .page-header,
+            .controls-bar,
+            .kanban-container,
+            .list-container {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Spline 3D Background -->
+    <div class="spline-container">
+        <iframe src="https://my.spline.design/claritystream-a72K0KUwFoZV82QBzvu52Kai" frameborder="0" width="100%"
+            height="100%"></iframe>
+    </div>
+
+    <!-- Dark Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo" style="text-decoration: none;">GearGuard</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="equipment.html">Equipment</a></li>
+                <li><a href="teams.html">Teams</a></li>
+                <li><a href="request.html" class="active">Requests</a></li>
+                <li><a href="calendar.html">Calendar</a></li>
+                <li><a href="reports.html">Reports</a></li>
+            </ul>
+            <div class="user-profile">A</div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> / Maintenance Requests
+            </div>
+            <div class="header-content">
+                <h1 class="page-title">Maintenance Requests</h1>
+                <button class="btn btn-primary" onclick="openAddModal()">+ New Request</button>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search requests by subject or equipment..."
+                    onkeyup="filterRequests()">
+            </div>
+            <select class="filter-select" id="typeFilter" onchange="filterRequests()">
+                <option value="">All Types</option>
+                <option value="Corrective">Corrective</option>
+                <option value="Preventive">Preventive</option>
+            </select>
+            <select class="filter-select" id="stageFilter" onchange="filterRequests()">
+                <option value="">All Stages</option>
+                <option value="New">New</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Repaired">Repaired</option>
+                <option value="Scrap">Scrap</option>
+            </select>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="setView('kanban')">📋 Kanban</button>
+                <button class="view-btn" onclick="setView('list')">📄 List</button>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-container" id="kanbanView">
+            <div class="kanban-board">
+                <!-- New Column -->
+                <div class="kanban-column" data-stage="New">
+                    <div class="column-header new">
+                        <span class="column-title">🆕 New</span>
+                        <span class="column-count" id="count-new">0</span>
+                    </div>
+                    <div class="column-cards" id="cards-new" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="kanban-column" data-stage="In Progress">
+                    <div class="column-header in-progress">
+                        <span class="column-title">🔄 In Progress</span>
+                        <span class="column-count" id="count-in-progress">0</span>
+                    </div>
+                    <div class="column-cards" id="cards-in-progress" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+                </div>
+
+                <!-- Repaired Column -->
+                <div class="kanban-column" data-stage="Repaired">
+                    <div class="column-header repaired">
+                        <span class="column-title">✅ Repaired</span>
+                        <span class="column-count" id="count-repaired">0</span>
+                    </div>
+                    <div class="column-cards" id="cards-repaired" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+                </div>
+
+                <!-- Scrap Column -->
+                <div class="kanban-column" data-stage="Scrap">
+                    <div class="column-header scrap">
+                        <span class="column-title">🗑️ Scrap</span>
+                        <span class="column-count" id="count-scrap">0</span>
+                    </div>
+                    <div class="column-cards" id="cards-scrap" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div class="list-container" id="listView">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Equipment</th>
+                        <th>Type</th>
+                        <th>Stage</th>
+                        <th>Scheduled Date</th>
+                        <th>Technician</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Request Modal -->
+    <div class="modal" id="requestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">New Maintenance Request</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="requestForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="requestId">
+
+                <div class="form-group">
+                    <label class="form-label">Subject *</label>
+                    <input type="text" class="form-input" id="subject" placeholder="e.g., Oil leak in hydraulic system"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Equipment *</label>
+                    <select class="form-select" id="equipmentId" required onchange="autoFillFromEquipment()">
+                        <option value="">Select equipment</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <input type="text" class="form-input auto-filled" id="category" readonly>
+                        <p class="auto-fill-note">Auto-filled from equipment</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maintenance Team</label>
+                        <input type="text" class="form-input auto-filled" id="maintenanceTeam" readonly>
+                        <p class="auto-fill-note">Auto-filled from equipment</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Request Type *</label>
+                    <select class="form-select" id="requestType" required>
+                        <option value="">Select type</option>
+                        <option value="Corrective">Corrective (Emergency Repair)</option>
+                        <option value="Preventive">Preventive (Scheduled Maintenance)</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Scheduled Date</label>
+                        <input type="datetime-local" class="form-input" id="scheduledDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estimated Duration (hours)</label>
+                        <input type="number" class="form-input" id="duration" placeholder="e.g., 2" min="0" step="0.5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Assigned Technician</label>
+                    <select class="form-select" id="technicianId">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Stage</label>
+                    <select class="form-select" id="stage">
+                        <option value="New">New</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Repaired">Repaired</option>
+                        <option value="Scrap">Scrap</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="notes" placeholder="Additional details..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        checkAuth();
+        let allRequests = [];
+        let allEquipment = [];
+        // let allUsers = []; // Removing allUsers fetch for now
+
+        // Fetch all data on load
+        async function fetchData() {
+            try {
+                const [requestsRes, equipmentRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/requests/`, { headers: getAuthHeaders() }),
+                    fetch(`${API_BASE_URL}/equipment/`, { headers: getAuthHeaders() })
+                ]);
+
+                if (requestsRes.status === 401) { logout(); return; }
+
+                if (!requestsRes.ok) throw new Error('Failed to fetch requests');
+
+                allRequests = await requestsRes.json();
+                allEquipment = equipmentRes.ok ? await equipmentRes.json() : [];
+
+                populateDropdowns();
+
+                // Check for URL parameters to filter
+                const urlParams = new URLSearchParams(window.location.search);
+                const equipmentId = urlParams.get('equipment_id');
+
+                if (equipmentId) {
+                    const equipment = allEquipment.find(e => e.id == equipmentId);
+                    if (equipment) {
+                        // Set search input to equipment name to filter by it
+                        const searchInput = document.getElementById('searchInput');
+                        if (searchInput) {
+                            searchInput.value = equipment.equipment_name;
+                        }
+                        // Filter the requests
+                        const filtered = allRequests.filter(req => req.equipment_id == equipmentId);
+                        renderRequests(filtered);
+                        return; // Skip default render
+                    }
+                }
+
+                renderRequests(allRequests);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to load data. Please check if backend is running.');
+            }
+        }
+
+        // Populate equipment dropdown
+        function populateDropdowns() {
+            const equipmentSelect = document.getElementById('equipmentId');
+            equipmentSelect.innerHTML = '<option value="">Select equipment</option>';
+            allEquipment.forEach(eq => {
+                equipmentSelect.innerHTML += `<option value="${eq.id}">${eq.equipment_name} (${eq.serial_number})</option>`;
+            });
+        }
+
+        // Auto-fill category and team from selected equipment
+        // Auto-fill category and team from selected equipment
+        function autoFillFromEquipment() {
+            const equipmentId = document.getElementById('equipmentId').value;
+            const equipment = allEquipment.find(eq => eq.id == equipmentId);
+
+            if (equipment) {
+                document.getElementById('category').value = equipment.category || 'Uncategorized';
+
+                // If the backend sends the full team object
+                if (equipment.team && equipment.team.team_name) {
+                    document.getElementById('maintenanceTeam').value = equipment.team.team_name;
+                } else if (equipment.maintenance_team_id) {
+                    // Fallback if we only have ID (ideally we should fetch teams to map this, but for now showing ID is better than nothing)
+                    document.getElementById('maintenanceTeam').value = `Team #${equipment.maintenance_team_id}`;
+                } else {
+                    document.getElementById('maintenanceTeam').value = 'No Team Assigned';
+                }
+            } else {
+                document.getElementById('category').value = '';
+                document.getElementById('maintenanceTeam').value = '';
+            }
+        }
+
+        // Get equipment name by ID
+        function getEquipmentName(id) {
+            const eq = allEquipment.find(e => e.id == id);
+            return eq ? eq.equipment_name : 'Unknown Device';
+        }
+
+        function getTechnicianName(id) {
+            return id ? `Tech #${id}` : 'Unassigned';
+        }
+
+        function getTechnicianInitials(id) {
+            return id ? `#${id}` : '?';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not scheduled';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getStageKey(stage) {
+            return stage ? stage.toLowerCase().replace(' ', '-') : 'new';
+        }
+
+        function renderRequests(requests) {
+            renderKanban(requests);
+            renderList(requests);
+        }
+
+        function renderKanban(requests) {
+            const stages = ['New', 'In Progress', 'Repaired', 'Scrap'];
+
+            stages.forEach(stage => {
+                const stageKey = getStageKey(stage);
+                const container = document.getElementById(`cards-${stageKey}`);
+                const countEl = document.getElementById(`count-${stageKey}`);
+
+                if (!container) return; // Guard clause
+
+                const stageRequests = requests.filter(r => r.stage === stage);
+                if (countEl) countEl.textContent = stageRequests.length;
+
+                if (stageRequests.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="padding: 2rem; font-size: 0.875rem; color: #a1a1aa;">No requests</div>';
+                    return;
+                }
+
+                container.innerHTML = stageRequests.map(req => `
+                    <div class="request-card" draggable="true" ondragstart="drag(event)" data-id="${req.id}">
+                        <div class="card-subject">${req.subject}</div>
+                        <div class="card-equipment">
+                            ⚙️ ${getEquipmentName(req.equipment_id)}
+                        </div>
+                        <div class="card-meta">
+                            <span class="request-type type-${req.request_type ? req.request_type.toLowerCase() : 'unknown'}">${req.request_type}</span>
+                            <div class="technician-avatar" title="${getTechnicianName(req.assigned_technician_id)}">
+                                ${getTechnicianInitials(req.assigned_technician_id)}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function renderList(requests) {
+            const tbody = document.getElementById('requestsTableBody');
+            if (!tbody) return; // Guard clause
+
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem; color: #a1a1aa;">No requests found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td>${req.subject}</td>
+                    <td>${getEquipmentName(req.equipment_id)}</td>
+                    <td><span class="request-type type-${req.request_type ? req.request_type.toLowerCase() : 'unknown'}">${req.request_type}</span></td>
+                    <td><span class="stage-badge stage-${getStageKey(req.stage)}">${req.stage}</span></td>
+                    <td>${formatDate(req.scheduled_date)}</td>
+                    <td>${getTechnicianName(req.assigned_technician_id)}</td>
+                    <td>${req.duration ? req.duration + 'h' : '-'}</td>
+                    <td>
+                        <button class="action-btn" onclick="deleteRequest(${req.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterRequests() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const stageFilter = document.getElementById('stageFilter').value;
+
+            const filtered = allRequests.filter(req => {
+                const equipmentName = getEquipmentName(req.equipment_id).toLowerCase();
+                const matchesSearch = req.subject.toLowerCase().includes(searchTerm) || equipmentName.includes(searchTerm);
+                const matchesType = !typeFilter || req.request_type === typeFilter;
+                const matchesStage = !stageFilter || req.stage === stageFilter;
+
+                return matchesSearch && matchesType && matchesStage;
+            });
+
+            renderRequests(filtered);
+        }
+
+        function setView(view) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'kanban') {
+                document.getElementById('kanbanView').classList.remove('hidden');
+                document.getElementById('listView').classList.remove('active');
+            } else {
+                document.getElementById('kanbanView').classList.add('hidden');
+                document.getElementById('listView').classList.add('active');
+            }
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("requestId", ev.target.dataset.id);
+            ev.target.classList.add('dragging');
+        }
+
+        async function drop(ev) {
+            ev.preventDefault();
+            const requestId = ev.dataTransfer.getData("requestId");
+            const newStage = ev.target.closest('.kanban-column').dataset.stage;
+
+            document.querySelectorAll('.request-card').forEach(card => card.classList.remove('dragging'));
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ stage: newStage })
+                });
+
+                if (!response.ok) throw new Error('Failed to update stage');
+
+                // Update local data and re-render
+                const request = allRequests.find(r => r.id == requestId);
+                if (request) request.stage = newStage;
+                renderRequests(allRequests);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update request stage');
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'New Maintenance Request';
+            document.getElementById('requestForm').reset();
+            document.getElementById('requestId').value = '';
+            document.getElementById('requestModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('requestModal').classList.remove('active');
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('requestId').value;
+            const equipmentId = document.getElementById('equipmentId').value;
+
+            const data = {
+                subject: document.getElementById('subject').value,
+                equipment_id: parseInt(equipmentId),
+                request_type: document.getElementById('requestType').value,
+                scheduled_date: document.getElementById('scheduledDate').value || null,
+                duration: parseFloat(document.getElementById('duration').value) || null,
+                // assigned_technician_id: parseInt(document.getElementById('technicianId').value) || null, // Not enabled in UI yet
+                stage: document.getElementById('stage').value,
+                notes: document.getElementById('notes').value || null
+            };
+
+            try {
+                const url = id ? `${API_BASE_URL}/requests/${id}` : `${API_BASE_URL}/requests/`;
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error('Failed to save request');
+
+                closeModal();
+                fetchData();
+                alert(id ? 'Request updated successfully!' : 'Request created successfully! Auto-filled category & team.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save request. Please try again.');
+            }
+        }
+
+        async function deleteRequest(id) {
+            if (!confirm('Are you sure you want to delete this request?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/requests/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to delete request');
+                }
+
+                alert('Request deleted successfully!');
+                fetchData();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function showError(message) {
+            console.error(message);
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+
+</html>

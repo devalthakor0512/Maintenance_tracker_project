@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Calendar - GearGuard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Spline Background */
+        .spline-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .spline-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.4);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+        }
+
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 3rem 4rem 2rem;
+        }
+
+        .breadcrumb {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: #a1a1aa;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #ffffff;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            padding: 0 4rem 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+        }
+
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: 600;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .today-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 0.5rem;
+            color: #d946ef;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .today-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-left: auto;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.preventive {
+            background: #22c55e;
+        }
+
+        .legend-dot.corrective {
+            background: #ef4444;
+        }
+
+        /* Calendar Container */
+        .calendar-container {
+            padding: 0 4rem 4rem;
+        }
+
+        .calendar {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        /* Calendar Header (Days of Week) */
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .day-name {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            padding: 0.5rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+
+        .calendar-day:nth-child(7n) {
+            border-right: none;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .day-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .calendar-day.today .day-number {
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Events */
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .event {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .event:hover {
+            transform: scale(1.02);
+        }
+
+        .event.preventive {
+            background: rgba(34, 197, 94, 0.2);
+            border-left: 3px solid #22c55e;
+            color: #4ade80;
+        }
+
+        .event.corrective {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 3px solid #ef4444;
+            color: #f87171;
+        }
+
+        .more-events {
+            font-size: 0.7rem;
+            color: #a1a1aa;
+            padding: 0.25rem;
+            cursor: pointer;
+        }
+
+        .more-events:hover {
+            color: #ffffff;
+        }
+
+        /* Sidebar */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+            padding: 0 4rem 4rem;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upcoming-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upcoming-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upcoming-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+
+        .upcoming-date {
+            font-size: 0.75rem;
+            color: #a855f7;
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-subject {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-equipment {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+
+        .upcoming-type {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .upcoming-type.preventive {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .upcoming-type.corrective {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Event Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .detail-label {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #a1a1aa;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Loading & Empty States */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #a1a1aa;
+            font-size: 1.25rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #a1a1aa;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            nav,
+            .page-header,
+            .controls-bar,
+            .main-layout {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .legend {
+                margin-left: 0;
+                justify-content: center;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+            }
+
+            .event {
+                font-size: 0.65rem;
+                padding: 0.125rem 0.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Spline 3D Background -->
+    <div class="spline-container">
+        <iframe src="https://my.spline.design/claritystream-a72K0KUwFoZV82QBzvu52Kai" frameborder="0" width="100%"
+            height="100%"></iframe>
+    </div>
+
+    <!-- Dark Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo" style="text-decoration: none;">GearGuard</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="equipment.html">Equipment</a></li>
+                <li><a href="teams.html">Teams</a></li>
+                <li><a href="request.html">Requests</a></li>
+                <li><a href="calendar.html" class="active">Calendar</a></li>
+                <li><a href="reports.html">Reports</a></li>
+            </ul>
+            <div class="user-profile">A</div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> / Calendar
+            </div>
+            <div class="header-content">
+                <h1 class="page-title">Maintenance Calendar</h1>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="month-nav">
+                <button class="nav-btn" onclick="prevMonth()">←</button>
+                <span class="current-month" id="currentMonth">December 2024</span>
+                <button class="nav-btn" onclick="nextMonth()">→</button>
+            </div>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+            <select class="filter-select" id="typeFilter" onchange="filterEvents()">
+                <option value="">All Types</option>
+                <option value="Preventive">Preventive Only</option>
+                <option value="Corrective">Corrective Only</option>
+            </select>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot preventive"></div>
+                    <span>Preventive</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot corrective"></div>
+                    <span>Corrective</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Calendar -->
+            <div class="calendar">
+                <div class="calendar-header">
+                    <div class="day-name">Sun</div>
+                    <div class="day-name">Mon</div>
+                    <div class="day-name">Tue</div>
+                    <div class="day-name">Wed</div>
+                    <div class="day-name">Thu</div>
+                    <div class="day-name">Fri</div>
+                    <div class="day-name">Sat</div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h3 class="sidebar-title">📅 Upcoming Maintenance</h3>
+                <div class="upcoming-list" id="upcomingList">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalSubject">Request Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalDetails">
+                <div class="detail-row">
+                    <span class="detail-label">Equipment</span>
+                    <span class="detail-value" id="modalEquipment">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value" id="modalType">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Scheduled Date</span>
+                    <span class="detail-value" id="modalDate">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Stage</span>
+                    <span class="detail-value" id="modalStage">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Technician</span>
+                    <span class="detail-value" id="modalTechnician">-</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="viewRequest()">View Full Details</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        checkAuth();
+        // API Configuration
+        // Note: API_BASE_URL is imported from js/config.js but we need to include it
+
+        let allRequests = [];
+        let allEquipment = [];
+        // let allUsers = []; // Removing allUsers since endpoint doesn't exist for general users
+        let currentDate = new Date();
+        let selectedRequest = null;
+
+        // Fetch all data
+        async function fetchData() {
+            try {
+                // We'll fetch all requests instead of just /calendar endpoint to be safe and client-side filter
+                // Or we can use the /requests endpoint which returns everything
+                const [requestsRes, equipmentRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/requests/`, { headers: getAuthHeaders() }),
+                    fetch(`${API_BASE_URL}/equipment/`, { headers: getAuthHeaders() })
+                ]);
+
+                if (requestsRes.status === 401) { logout(); return; }
+
+                allRequests = requestsRes.ok ? await requestsRes.json() : [];
+                allEquipment = equipmentRes.ok ? await equipmentRes.json() : [];
+
+                // Filter out requests without dates for the calendar view if needed, 
+                // but let's keep them in memory and just not render them on the grid if date is null
+
+                renderCalendar();
+                renderUpcoming();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('calendarGrid').innerHTML = '<div class="loading">Failed to load data</div>';
+            }
+        }
+
+        // Get equipment name
+        function getEquipmentName(id) {
+            const eq = allEquipment.find(e => e.id == id);
+            return eq ? eq.equipment_name : 'Unknown';
+        }
+
+        // Get technician name
+        function getTechnicianName(id) {
+            if (!id) return 'Unassigned';
+            const user = allUsers.find(u => u.id == id);
+            return user ? user.name : 'Unknown';
+        }
+
+        // Format date
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function formatFullDate(dateStr) {
+            if (!dateStr) return 'Not scheduled';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('currentMonth').textContent = formatDate(currentDate);
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            let html = '';
+            let dayCount = 1;
+            let nextMonthDay = 1;
+
+            // Calculate total cells needed (6 rows max)
+            const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
+
+            for (let i = 0; i < totalCells; i++) {
+                let dayNum, isOtherMonth = false, dateStr;
+
+                if (i < startDay) {
+                    dayNum = prevMonthLastDay - startDay + i + 1;
+                    isOtherMonth = true;
+                    dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                } else if (dayCount > daysInMonth) {
+                    dayNum = nextMonthDay++;
+                    isOtherMonth = true;
+                    dateStr = `${year}-${String(month + 2).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                } else {
+                    dayNum = dayCount++;
+                    dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                }
+
+                const isToday = !isOtherMonth &&
+                    dayNum === today.getDate() &&
+                    month === today.getMonth() &&
+                    year === today.getFullYear();
+
+                // Get events for this day
+                const dayEvents = allRequests.filter(req => {
+                    if (!req.scheduled_date) return false;
+                    const reqDate = new Date(req.scheduled_date);
+
+                    // Fix: Ensure we are comparing local dates correctly
+                    const matches = reqDate.getFullYear() === year &&
+                        reqDate.getMonth() === month &&
+                        reqDate.getDate() === dayNum &&
+                        !isOtherMonth;
+
+                    if (typeFilter && req.request_type !== typeFilter) return false;
+                    return matches;
+                });
+
+                html += `
+                    <div class="calendar-day ${isOtherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
+                        <div class="day-number">${dayNum}</div>
+                        <div class="day-events">
+                            ${dayEvents.slice(0, 3).map(evt => `
+                                <div class="event ${evt.request_type.toLowerCase()}" onclick="showEventDetail(${evt.id})">
+                                    ${evt.subject}
+                                </div>
+                            `).join('')}
+                            ${dayEvents.length > 3 ? `<div class="more-events">+${dayEvents.length - 3} more</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Render upcoming maintenance
+        function renderUpcoming() {
+            const list = document.getElementById('upcomingList');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const upcoming = allRequests
+                .filter(req => {
+                    if (!req.scheduled_date) return false;
+                    const reqDate = new Date(req.scheduled_date);
+                    return reqDate >= today && req.stage !== 'Repaired' && req.stage !== 'Scrap';
+                })
+                .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date))
+                .slice(0, 5);
+
+            if (upcoming.length === 0) {
+                list.innerHTML = '<div class="empty-state">No upcoming maintenance scheduled</div>';
+                return;
+            }
+
+            list.innerHTML = upcoming.map(req => `
+                <div class="upcoming-item" onclick="showEventDetail(${req.id})">
+                    <div class="upcoming-date">${formatFullDate(req.scheduled_date)}</div>
+                    <div class="upcoming-subject">${req.subject}</div>
+                    <div class="upcoming-equipment">⚙️ ${getEquipmentName(req.equipment_id)}</div>
+                    <span class="upcoming-type ${req.request_type.toLowerCase()}">${req.request_type}</span>
+                </div>
+            `).join('');
+        }
+
+        // Navigation
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        function filterEvents() {
+            renderCalendar();
+        }
+
+        // Show event detail modal
+        function showEventDetail(id) {
+            selectedRequest = allRequests.find(r => r.id == id);
+            if (!selectedRequest) return;
+
+            document.getElementById('modalSubject').textContent = selectedRequest.subject;
+            document.getElementById('modalEquipment').textContent = getEquipmentName(selectedRequest.equipment_id);
+            document.getElementById('modalType').textContent = selectedRequest.request_type;
+            document.getElementById('modalDate').textContent = formatFullDate(selectedRequest.scheduled_date);
+            document.getElementById('modalStage').textContent = selectedRequest.stage;
+            document.getElementById('modalTechnician').textContent = getTechnicianName(selectedRequest.assigned_technician_id);
+
+            document.getElementById('eventModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            selectedRequest = null;
+        }
+
+        function viewRequest() {
+            if (selectedRequest) {
+                window.location.href = `request.html?id=${selectedRequest.id}`;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+
+</html>

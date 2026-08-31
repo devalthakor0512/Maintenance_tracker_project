@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - GearGuard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Unicorn Background */
+        .unicorn-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.5);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+        }
+
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 3rem 4rem 2rem;
+        }
+
+        .breadcrumb {
+            font-size: 0.875rem;
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: #a1a1aa;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #ffffff;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Filters Panel */
+        .filters-panel {
+            padding: 0 4rem 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+            min-width: 160px;
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .clear-filters-btn {
+            padding: 0.75rem 1.25rem;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.5rem;
+            color: #f87171;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .clear-filters-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* KPI Cards */
+        .kpi-section {
+            padding: 0 4rem 2rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(168, 85, 247, 0.15);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-icon.total {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .kpi-icon.open {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .kpi-icon.completed {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+        }
+
+        .kpi-icon.scrapped {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e5e5e5;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-subtext {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            padding: 0 4rem 2rem;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .chart-container.small {
+            height: 250px;
+        }
+
+        /* Maintenance Type Comparison */
+        .type-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .type-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .type-value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-value.preventive {
+            color: #4ade80;
+        }
+
+        .type-value.corrective {
+            color: #f87171;
+        }
+
+        .type-label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .type-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .type-bar-fill.preventive {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .type-bar-fill.corrective {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .type-percentage {
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            margin-top: 0.5rem;
+        }
+
+        /* Timeline Chart */
+        .timeline-section {
+            padding: 0 4rem 4rem;
+        }
+
+        /* Legend */
+        .chart-legend {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #a1a1aa;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #a1a1aa;
+        }
+
+        @media (max-width: 1200px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            nav,
+            .page-header,
+            .filters-panel,
+            .kpi-section,
+            .charts-section,
+            .timeline-section {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .type-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Unicorn Studio Background -->
+    <div class="unicorn-bg">
+        <div data-us-project="p7Ff6pfTrb5Gs59C7nLC" class="absolute w-full h-full left-0 top-0 -z-10"
+            style="width: 100%; height: 100%;"></div>
+    </div>
+    <script
+        type="text/javascript">!function () { if (!window.UnicornStudio) { window.UnicornStudio = { isInitialized: !1 }; var i = document.createElement("script"); i.src = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js", i.onload = function () { window.UnicornStudio.isInitialized || (UnicornStudio.init(), window.UnicornStudio.isInitialized = !0) }, (document.head || document.body).appendChild(i) } }();</script>
+
+    <!-- Dark Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo" style="text-decoration: none;">GearGuard</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="equipment.html">Equipment</a></li>
+                <li><a href="teams.html">Teams</a></li>
+                <li><a href="request.html">Requests</a></li>
+                <li><a href="calendar.html">Calendar</a></li>
+                <li><a href="reports.html" class="active">Reports</a></li>
+            </ul>
+            <div class="user-profile">A</div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> / Reports & Analytics
+            </div>
+            <div class="header-content">
+                <h1 class="page-title">Reports & Analytics</h1>
+            </div>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="filters-panel">
+            <select class="filter-select" id="dateRangeFilter" onchange="applyFilters()">
+                <option value="">All Time</option>
+                <option value="this_month">This Month</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="this_year">This Year</option>
+            </select>
+            <select class="filter-select" id="teamFilter" onchange="applyFilters()">
+                <option value="">All Teams</option>
+            </select>
+            <select class="filter-select" id="categoryFilter" onchange="applyFilters()">
+                <option value="">All Categories</option>
+                <option value="Machine">Machines</option>
+                <option value="Vehicle">Vehicles</option>
+                <option value="Computer">Computers</option>
+                <option value="Tool">Tools</option>
+                <option value="Generator">Generators</option>
+                <option value="Other">Other</option>
+            </select>
+            <select class="filter-select" id="typeFilter" onchange="applyFilters()">
+                <option value="">All Types</option>
+                <option value="Preventive">Preventive</option>
+                <option value="Corrective">Corrective</option>
+            </select>
+            <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-section">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon total">📊</div>
+                    </div>
+                    <div class="kpi-value" id="totalRequests">0</div>
+                    <div class="kpi-label">Total Requests</div>
+                    <div class="kpi-subtext">Across all equipment</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon open">⏳</div>
+                    </div>
+                    <div class="kpi-value" id="openRequests">0</div>
+                    <div class="kpi-label">Open Requests</div>
+                    <div class="kpi-subtext">Requires attention</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon completed">✅</div>
+                    </div>
+                    <div class="kpi-value" id="completedRequests">0</div>
+                    <div class="kpi-label">Completed</div>
+                    <div class="kpi-subtext">Successfully resolved</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon scrapped">🗑️</div>
+                    </div>
+                    <div class="kpi-value" id="scrappedAssets">0</div>
+                    <div class="kpi-label">Scrapped</div>
+                    <div class="kpi-subtext">Equipment marked unusable</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <!-- Row 1: Bar Chart + Donut Chart -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Requests by Maintenance Team</div>
+                            <div class="chart-subtitle">Workload distribution across teams</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="teamChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Requests by Category</div>
+                            <div class="chart-subtitle">Equipment breakdown analysis</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Preventive vs Corrective -->
+            <div class="chart-card" style="margin-bottom: 1.5rem;">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Maintenance Type Comparison</div>
+                        <div class="chart-subtitle">Preventive vs Corrective maintenance balance</div>
+                    </div>
+                </div>
+                <div class="type-comparison">
+                    <div class="type-card">
+                        <div class="type-value preventive" id="preventiveCount">0</div>
+                        <div class="type-label">Preventive Maintenance</div>
+                        <div class="type-bar">
+                            <div class="type-bar-fill preventive" id="preventiveBar" style="width: 0%;"></div>
+                        </div>
+                        <div class="type-percentage" id="preventivePercent">0% of total</div>
+                    </div>
+                    <div class="type-card">
+                        <div class="type-value corrective" id="correctiveCount">0</div>
+                        <div class="type-label">Corrective Maintenance</div>
+                        <div class="type-bar">
+                            <div class="type-bar-fill corrective" id="correctiveBar" style="width: 0%;"></div>
+                        </div>
+                        <div class="type-percentage" id="correctivePercent">0% of total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div class="timeline-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Maintenance Requests Timeline</div>
+                        <div class="chart-subtitle">Trend analysis over the past 6 months</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #a855f7;"></div>
+                        <span>Total Requests</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #22c55e;"></div>
+                        <span>Preventive</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ef4444;"></div>
+                        <span>Corrective</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+        let allRequests = [];
+        let allTeams = [];
+        let allEquipment = [];
+        let filteredRequests = [];
+
+        // Chart instances
+        let teamChart, categoryChart, timelineChart;
+
+        // Fetch all data
+        async function fetchData() {
+            try {
+                const [requestsRes, teamsRes, equipmentRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/requests`),
+                    fetch(`${API_BASE_URL}/teams`),
+                    fetch(`${API_BASE_URL}/equipment`)
+                ]);
+
+                allRequests = requestsRes.ok ? await requestsRes.json() : [];
+                allTeams = teamsRes.ok ? await teamsRes.json() : [];
+                allEquipment = equipmentRes.ok ? await equipmentRes.json() : [];
+
+                populateTeamFilter();
+                applyFilters();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Use sample data for demo
+                useSampleData();
+            }
+        }
+
+        // Sample data for demo
+        function useSampleData() {
+            allRequests = [
+                { id: 1, subject: 'Oil Change', equipment_id: 1, request_type: 'Preventive', stage: 'Repaired', maintenance_team_id: 1, scheduled_date: '2024-12-01' },
+                { id: 2, subject: 'Belt Replacement', equipment_id: 2, request_type: 'Corrective', stage: 'In Progress', maintenance_team_id: 1, scheduled_date: '2024-12-05' },
+                { id: 3, subject: 'Software Update', equipment_id: 3, request_type: 'Preventive', stage: 'New', maintenance_team_id: 2, scheduled_date: '2024-12-10' },
+                { id: 4, subject: 'Engine Repair', equipment_id: 4, request_type: 'Corrective', stage: 'Repaired', maintenance_team_id: 1, scheduled_date: '2024-11-15' },
+                { id: 5, subject: 'Calibration', equipment_id: 1, request_type: 'Preventive', stage: 'Repaired', maintenance_team_id: 1, scheduled_date: '2024-11-20' },
+                { id: 6, subject: 'Motor Failure', equipment_id: 5, request_type: 'Corrective', stage: 'Scrap', maintenance_team_id: 3, scheduled_date: '2024-10-25' },
+                { id: 7, subject: 'Tire Rotation', equipment_id: 4, request_type: 'Preventive', stage: 'Repaired', maintenance_team_id: 1, scheduled_date: '2024-10-10' },
+                { id: 8, subject: 'Network Issue', equipment_id: 3, request_type: 'Corrective', stage: 'In Progress', maintenance_team_id: 2, scheduled_date: '2024-12-15' },
+                { id: 9, subject: 'Hydraulic Check', equipment_id: 1, request_type: 'Preventive', stage: 'New', maintenance_team_id: 1, scheduled_date: '2024-12-20' },
+                { id: 10, subject: 'Blade Sharpening', equipment_id: 6, request_type: 'Preventive', stage: 'Repaired', maintenance_team_id: 3, scheduled_date: '2024-09-15' }
+            ];
+            allTeams = [
+                { id: 1, team_name: 'Mechanics' },
+                { id: 2, team_name: 'IT Support' },
+                { id: 3, team_name: 'Electricians' }
+            ];
+            allEquipment = [
+                { id: 1, equipment_name: 'CNC Machine 01', category: 'Machine' },
+                { id: 2, equipment_name: 'Conveyor Belt', category: 'Machine' },
+                { id: 3, equipment_name: 'Server Rack', category: 'Computer' },
+                { id: 4, equipment_name: 'Delivery Truck', category: 'Vehicle' },
+                { id: 5, equipment_name: 'Generator A', category: 'Generator' },
+                { id: 6, equipment_name: 'Power Drill', category: 'Tool' }
+            ];
+            populateTeamFilter();
+            applyFilters();
+        }
+
+        // Populate team filter
+        function populateTeamFilter() {
+            const select = document.getElementById('teamFilter');
+            select.innerHTML = '<option value="">All Teams</option>';
+            allTeams.forEach(team => {
+                select.innerHTML += `<option value="${team.id}">${team.team_name}</option>`;
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const dateRange = document.getElementById('dateRangeFilter').value;
+            const teamId = document.getElementById('teamFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const type = document.getElementById('typeFilter').value;
+
+            filteredRequests = allRequests.filter(req => {
+                // Date filter
+                if (dateRange && req.scheduled_date) {
+                    const reqDate = new Date(req.scheduled_date);
+                    const now = new Date();
+                    let startDate;
+
+                    switch (dateRange) {
+                        case 'this_month':
+                            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                            break;
+                        case 'last_3_months':
+                            startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+                            break;
+                        case 'last_6_months':
+                            startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+                            break;
+                        case 'this_year':
+                            startDate = new Date(now.getFullYear(), 0, 1);
+                            break;
+                    }
+                    if (startDate && reqDate < startDate) return false;
+                }
+
+                // Team filter
+                if (teamId && req.maintenance_team_id != teamId) return false;
+
+                // Category filter
+                if (category) {
+                    const equipment = allEquipment.find(e => e.id == req.equipment_id);
+                    if (!equipment || equipment.category !== category) return false;
+                }
+
+                // Type filter
+                if (type && req.request_type !== type) return false;
+
+                return true;
+            });
+
+            updateKPIs();
+            updateCharts();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('dateRangeFilter').value = '';
+            document.getElementById('teamFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            applyFilters();
+        }
+
+        // Update KPI cards
+        function updateKPIs() {
+            const total = filteredRequests.length;
+            const open = filteredRequests.filter(r => r.stage === 'New' || r.stage === 'In Progress').length;
+            const completed = filteredRequests.filter(r => r.stage === 'Repaired').length;
+            const scrapped = filteredRequests.filter(r => r.stage === 'Scrap').length;
+
+            animateValue('totalRequests', total);
+            animateValue('openRequests', open);
+            animateValue('completedRequests', completed);
+            animateValue('scrappedAssets', scrapped);
+        }
+
+        // Animate number
+        function animateValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            const duration = 500;
+            const start = parseInt(element.textContent) || 0;
+            const increment = (value - start) / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= value) || (increment < 0 && current <= value)) {
+                    element.textContent = value;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, 16);
+        }
+
+        // Update all charts
+        function updateCharts() {
+            updateTeamChart();
+            updateCategoryChart();
+            updateTypeComparison();
+            updateTimelineChart();
+        }
+
+        // Team Bar Chart
+        function updateTeamChart() {
+            const ctx = document.getElementById('teamChart').getContext('2d');
+
+            const teamData = {};
+            allTeams.forEach(team => {
+                teamData[team.id] = { name: team.team_name, total: 0, open: 0, completed: 0 };
+            });
+
+            filteredRequests.forEach(req => {
+                if (teamData[req.maintenance_team_id]) {
+                    teamData[req.maintenance_team_id].total++;
+                    if (req.stage === 'New' || req.stage === 'In Progress') {
+                        teamData[req.maintenance_team_id].open++;
+                    } else if (req.stage === 'Repaired') {
+                        teamData[req.maintenance_team_id].completed++;
+                    }
+                }
+            });
+
+            const labels = Object.values(teamData).map(t => t.name);
+            const totals = Object.values(teamData).map(t => t.total);
+
+            if (teamChart) teamChart.destroy();
+
+            teamChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Requests',
+                        data: totals,
+                        backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                        borderColor: '#a855f7',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        hoverBackgroundColor: 'rgba(168, 85, 247, 0.9)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a1a1aa',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Category Donut Chart
+        function updateCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+
+            const categoryData = {};
+            filteredRequests.forEach(req => {
+                const equipment = allEquipment.find(e => e.id == req.equipment_id);
+                const cat = equipment ? equipment.category : 'Other';
+                categoryData[cat] = (categoryData[cat] || 0) + 1;
+            });
+
+            const labels = Object.keys(categoryData);
+            const data = Object.values(categoryData);
+            const colors = ['#a855f7', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'];
+
+            if (categoryChart) categoryChart.destroy();
+
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderColor: '#0a0a0f',
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#a1a1aa', padding: 15, font: { size: 12 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a1a1aa',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        // Type Comparison
+        function updateTypeComparison() {
+            const preventive = filteredRequests.filter(r => r.request_type === 'Preventive').length;
+            const corrective = filteredRequests.filter(r => r.request_type === 'Corrective').length;
+            const total = preventive + corrective;
+
+            document.getElementById('preventiveCount').textContent = preventive;
+            document.getElementById('correctiveCount').textContent = corrective;
+
+            const preventivePercent = total > 0 ? Math.round((preventive / total) * 100) : 0;
+            const correctivePercent = total > 0 ? Math.round((corrective / total) * 100) : 0;
+
+            document.getElementById('preventiveBar').style.width = preventivePercent + '%';
+            document.getElementById('correctiveBar').style.width = correctivePercent + '%';
+
+            document.getElementById('preventivePercent').textContent = preventivePercent + '% of total';
+            document.getElementById('correctivePercent').textContent = correctivePercent + '% of total';
+        }
+
+        // Timeline Line Chart
+        function updateTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+
+            // Get last 6 months
+            const months = [];
+            const now = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push({
+                    label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                    year: d.getFullYear(),
+                    month: d.getMonth()
+                });
+            }
+
+            const totalData = months.map(m => {
+                return filteredRequests.filter(r => {
+                    if (!r.scheduled_date) return false;
+                    const d = new Date(r.scheduled_date);
+                    return d.getFullYear() === m.year && d.getMonth() === m.month;
+                }).length;
+            });
+
+            const preventiveData = months.map(m => {
+                return filteredRequests.filter(r => {
+                    if (!r.scheduled_date) return false;
+                    const d = new Date(r.scheduled_date);
+                    return d.getFullYear() === m.year && d.getMonth() === m.month && r.request_type === 'Preventive';
+                }).length;
+            });
+
+            const correctiveData = months.map(m => {
+                return filteredRequests.filter(r => {
+                    if (!r.scheduled_date) return false;
+                    const d = new Date(r.scheduled_date);
+                    return d.getFullYear() === m.year && d.getMonth() === m.month && r.request_type === 'Corrective';
+                }).length;
+            });
+
+            if (timelineChart) timelineChart.destroy();
+
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months.map(m => m.label),
+                    datasets: [
+                        {
+                            label: 'Total',
+                            data: totalData,
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#a855f7',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Preventive',
+                            data: preventiveData,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            pointBackgroundColor: '#22c55e',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Corrective',
+                            data: correctiveData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            pointBackgroundColor: '#ef4444',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a1a1aa',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+
+</html>
